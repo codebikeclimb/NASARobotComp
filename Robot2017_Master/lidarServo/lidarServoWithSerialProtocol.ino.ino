@@ -1,8 +1,16 @@
+#include <Adafruit_PWMServoDriver.h>
+
 #include <LIDARLite.h>
 
 #include <Wire.h>
 
-#include <Servo.h>
+// called this way, it uses the default address 0x40
+Adafruit_PWMServoDriver servo = Adafruit_PWMServoDriver();
+
+#define min 150
+#define max 600
+
+uint8_t servonum = 0;
 
 unsigned long serialdata;
 int inbyte;
@@ -13,8 +21,7 @@ int servoPin;
 
 
 
-Servo myservo[] = {};
-Servo myservo1;
+
 LIDARLite myLidarLite;
 
 void setup()
@@ -22,7 +29,10 @@ void setup()
   Serial.begin(115200);
   myLidarLite.begin();
   myLidarLite.changeAddress(0x66,false);
+  servo.begin();
+  servo.setPWMFreq(60);
   
+  yield();
 }
 
 void loop()
@@ -52,15 +62,12 @@ void loop()
            servoPose = serialdata;
            if (attachedServos[servoPin] == 1)
            {
-             myservo[servoPin].write(servoPose);
+             scan();
+             Serial.println(getDistance());
            }
            if (attachedServos[servoPin] == 0)
            {
-             Servo s1;
-             myservo[servoPin] = s1;
-             myservo[servoPin].attach(servoPin);
-             myservo[servoPin].write(servoPose);
-             attachedServos[servoPin] = 1;
+             
            }
            servoPoses[servoPin] = servoPose;
            break;
@@ -72,16 +79,13 @@ void loop()
           servoPin = serialdata;
           if (attachedServos[servoPin] == 1)
           {
-            myservo[servoPin].detach();
+            servoStop();
             attachedServos[servoPin] = 0;  
           }
         }
       }
     break;
     }
-    
-    
-     
   }
 }
 
@@ -93,7 +97,6 @@ long getSerial()
     inbyte = Serial.read(); 
     if (inbyte > 0 && inbyte != '/')
     {
-     
       serialdata = serialdata * 10 + inbyte - '0';
     }
   }
@@ -101,29 +104,41 @@ long getSerial()
   return serialdata;
 }
 
+// you can use this function if you'd like to set the pulse length in seconds
+// e.g. setServoPulse(0, 0.001) is a ~1 millisecond pulse width. its not precise!
+void setServoPulse(uint8_t n, double pulse) {
+  double pulselength;
+  
+  pulselength = 1000000;   // 1,000,000 us per second
+  pulselength /= 60;   // 60 Hz
+  Serial.print(pulselength); Serial.println(" us per period"); 
+  pulselength /= 4096;  // 12 bits of resolution
+  Serial.print(pulselength); Serial.println(" us per bit"); 
+  pulse *= 1000;
+  pulse /= pulselength;
+  Serial.println(pulse);
+  servo.setPWM(n, 0, pulse);
+}
+
+
 void scan()
 {
-  myservo1.attach(9);
-  for(int pos = 0; pos < 180; pos += 1) // goes from 0 degrees to 180 degrees
-  { // in steps of 1 degree
-  
-  myservo1.write(pos); // tell servo to go to position in variable 'pos'
-  
-  delay(15); // waits 15ms for the servo to reach the position
+  for(uint16_t pulselen = min; pulselen < max; pulselen++){
+    servo.setPWM(servonum, 0, pulselen);
+    Serial.println(pulselen);
   }
-  for(int pos = 180; pos>=1; pos-=1) // goes from 180 degrees to 0 degrees
-  {
-  
-  myservo1.write(pos); // tell servo to go to position in variable 'pos'
-  
-  delay(15); // waits 15ms for the servo to reach the
+  delay(500);
+  for(uint16_t pulselen = max; pulselen > min; pulselen--){
+    servo.setPWM(servonum, 0, pulselen);
+    Serial.println(pulselen);
   }
+  delay(500);
 
 }
 
 void servoStop()
 {
-  myservo1.detach();
+  servo.setPWM(servonum, 0, 0);
 }
 
 int getDistance()
