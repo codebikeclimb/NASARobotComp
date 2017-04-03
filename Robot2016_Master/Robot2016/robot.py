@@ -7,13 +7,13 @@ import atexit
 
 #serial commands to arduino
 COMMANDS = {
-    "STOP_SERVO": 0x00,     #turn off servos on arduino
-    "PAN_LEFT": 0x01,       #pan lidar to the leftmost position
-    "PAN_RIGHT": 0x02,      #pan lidar to the rightmost position
-    "PAN_CENTER": 0x03,     #pan lidar back to the center postion
-    "SERVO_POS": 0x04,      #get servo position
-    "READ_LIDAR": 0x05,     #get distance readings from the lidar
-    "READ_COMPASS": 0X06,   #unused for now
+    "STOP_SERVO": 0x00,
+    "PAN_LEFT": 0x01,
+    "PAN_RIGHT": 0x02,
+    "PAN_CENTER": 0x03,
+    "SERVO_POS": 0x04,
+    "READ_BEACON": 0x05,
+    "READ_COMPASS": 0X06,
 }
 
 done = False
@@ -25,9 +25,12 @@ beaconHeadings = []
 #initialize i2c communication with motor shield
 roboMotor = Adafruit_MotorHAT(addr=0x60)
 
+#initialize i2c communication with robot compass
+roboCompass = serial.Serial('/dev/ttyACM3', 9600)
+
 #create motor objects
-leftFrontRear = roboMotor.getMotor(3)
-rightFrontRear = roboMotor.getMotor(4)
+leftFrontRear = roboMotor.getMotor(1)
+rightFrontRear = roboMotor.getMotor(3)
 
 #initialize serial communications with XBee RF reciever
 xBee_compass = serial.Serial('/dev/ttyACM1',57600)
@@ -37,18 +40,18 @@ lidar = serial.Serial('/dev/ttyACM0', 115200)
 ########################################################################################################################
 
 #send arduino lidar instructions
-def sendCommandToLidar(x):
-    lidar.write(x)
+def sendCommandToLidar():
+    lidar.write()
 
 #send Fio xbee & compass instructions
-def sendCommandToBeaconNavigation(x):
-    xBee_compass.write(x)
+def sendCommandToBeaconNavigation():
+    xBee_compass.write()
 
 #get signal strengths from the xbee
 def getSignals():
     for i in range (0,9):
-        xBee_serial = xBee_compass.readline().strip() # read serial input from arduino and remove trailing \n character
-        h, s = xBee_serial.split(",")        #split serial input into two lists
+        xBee_serial = xBee_compass.readline()
+        h, s = xBee_serial.split(",")
         #beaconHeadings.append(h)
         signalList.append(s)
     return signalList
@@ -74,7 +77,7 @@ def findHeading():
     botTotal = sum(botHeadings)
     botLength = len(botHeadings)
     avgBotHeading = botTotal / botLength
-    #print "avg bot heading: ", avgBotHeading
+    print "avg bot heading: ", avgBotHeading
 
     #get the beacon headings and signal strengths in 2 different lists
     getSignals()
@@ -92,12 +95,12 @@ def findHeading():
     findBeacon(oppositeHeading, avgBotHeading)
 
 #turn the bot towards the beacon and call obstacle avoidance
-def findBeacon(cHeading, bHeading):
+def findBeacon( bHeading):
 
     #	while(botHeading <= oppositeHeading or botHeading >= oppositeHeading):
     while (bHeading > cHeading + 4 and bHeading < cHeading - 4):
         botHeading = xBee_compass.readline()
-        botHeading = int(botHeading)
+        botHeading = float(botHeading)
         print botHeading
         rightRotate()
 
@@ -109,22 +112,22 @@ def findWay(self):
     distanceArray = []
 
     # pan left
-    sendCommandToLidar(COMMANDS["PAN_LEFT"])
+    lidar.panleft()
     time.sleep(1)
-    distanceArray.append(sendCommandToLidar(COMMANDS["READ_LIDAR"]))
-    #aux.writetofile('Pan Left Distace', distanceArray[0])
+    distanceArray.append(lidar.distance())
+    aux.writetofile('Pan Left Distace', distanceArray[0])
 
     # pan center
-    sendCommandToLidar(COMMANDS["PAN_CENTER"])
+    lidar.pancenter()
     time.sleep(1)
-    distanceArray.append(sendCommandToLidar(COMMANDS["READ_LIDAR"]))
-    #aux.writetofile('Pan Center Distace', distanceArray[1])
+    distanceArray.append(lidar.distance())
+    aux.writetofile('Pan Center Distace', distanceArray[1])
 
     # pan right
-    sendCommandToLidar(COMMANDS["PAN_RIGHT"])
+    lidar.panright()
     time.sleep(1)
-    distanceArray.append(sendCommandToLidar(COMMANDS["READ_LIDAR"]))
-    #aux.writetofile('Pan Right Distace', distanceArray[2])
+    distanceArray.append(lidar.distance())
+    aux.writetofile('Pan Right Distace', distanceArray[2])
 
 
     maxdistance = max(distanceArray)
@@ -132,12 +135,11 @@ def findWay(self):
 
     if maxindex == 0:
         leftRotate()
-        #aux.writetofile('Turning Left', distanceArray[maxindex])
+        aux.writetofile('Turning Left', distanceArray[maxindex])
     elif maxindex == 2:
         rightRotate()
-        #aux.writetofile('Turning Right', distanceArray[maxindex])
+        aux.writetofile('Turning Right', distanceArray[maxindex])
     else:
-
         aux.writetofile('Not Turning', distanceArray[maxindex])
 
     del distanceArray[:]
