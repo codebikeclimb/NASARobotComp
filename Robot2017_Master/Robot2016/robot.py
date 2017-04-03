@@ -4,6 +4,7 @@ from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
 import serial
 import time
 import atexit
+import math
 
 #serial commands to arduino
 COMMANDS = {
@@ -67,11 +68,13 @@ def getHeadings():
 
 #find the strongest signal from the beacon and get the heading, then calculate the opposite heading and pass that and bot heading to findBeacon()
 def findHeading():
+    #random direction seed
+    make_drunk_walk(5, 3)
     #read bot compass
     botHeading = xBee_compass.readline()
     botHeading = int(botHeadings)
     botHeadings.append(botHeading)
-    # print(botHeading)
+    # print "botHeading"
 
     #find the avg bot compass reading
     botTotal = sum(botHeadings)
@@ -100,14 +103,31 @@ def findBeacon( bHeading):
     #	while(botHeading <= oppositeHeading or botHeading >= oppositeHeading):
     while (bHeading > cHeading + 4 and bHeading < cHeading - 4):
         botHeading = xBee_compass.readline()
+<<<<<<< HEAD
         botHeading = float(botHeading)
         print botHeading
         rightRotate()
+=======
+        botHeading = int(botHeading)
+        print(botHeading)
+        rightRotate() #rotates until max(signalStrength)
+>>>>>>> refs/remotes/origin/robot-py-luke
 
     findWay();
 
+#Drunk Walk direction seed
+def make_drunk_walk(step_size, step_count):
+    move_options = (forward, leftTurn, rightTurn, reverse)
+    for _ in range(step_count):
+        move_somewhere = random.choice(move_options)
+        move_somewhere(step_count)
 
 #lidar obstacle avoidance
+"""
+def build_lidar(self):
+    distanceArray = []
+
+"""
 def findWay(self):
     distanceArray = []
 
@@ -202,3 +222,15 @@ atexit.register(turnOffMotors)
 
 while not done:
     print "heyoo"
+<<<<<<< HEAD
+=======
+    # TODO get new itr of sensor data from Arduino(s)
+
+    #TODO detect goal position from compass, sigStr
+    findHeading()
+
+    #TODO: Augment goal data with sensor data
+
+    #TODO: Send aug goal data to motor controll
+
+>>>>>>> refs/remotes/origin/robot-py-luke
