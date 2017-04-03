@@ -1,6 +1,8 @@
 import serial
 from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
 import time
+import math
+import random
 import atexit
 
 
@@ -37,15 +39,18 @@ def reverse():
 
 # rotate left, rotate right
 def leftRotate():
-    rightFrontRear.setSpeed(70)
-    rightFrontRear.run(Adafruit_MotorHAT.FORWARD)
-
+	for i in range(0,1000):
+   		 leftFrontRear.setSpeed(70)
+   		 rightFrontRear.setSpeed(70)
+   		 rightFrontRear.run(Adafruit_MotorHAT.FORWARD)
+   		 leftFrontRear.run(Adafruit_MotorHAT.BACKWARD)
 
 def rightRotate():
-    leftFrontRear.setSpeed(90)
-    rightFrontRear.setSpeed(90)
-    leftFrontRear.run(Adafruit_MotorHAT.FORWARD)
-    rightFrontRear.run(Adafruit_MotorHAT.BACKWARD)
+   	for i in range(0,1000):
+   		 leftFrontRear.setSpeed(90)
+   		 rightFrontRear.setSpeed(90)
+    		 leftFrontRear.run(Adafruit_MotorHAT.FORWARD)
+    		 rightFrontRear.run(Adafruit_MotorHAT.BACKWARD)
 
 
 # turn left, turn right
@@ -92,14 +97,45 @@ def findWay():
 
 	
 	turnOffMotors()
-	delay(150)
+	time.sleep(0.5)
+        a = random.randint(0,3)
+	
 	while(d <= 15):
-		rightRotate()
-		d = getDistance()
+	#	rightRotate()
+			 turnOffMotors()
+#		       	 d = getDistance()
+		
+
+	#	for i in range (1, (N)):
+       			 if a == 0:
+           			 rightRotate()
+           			 print 'Rotating right'
+                         	 d = getDistance()
+				 print d
+				 return d
+
+			 if a == 1:
+           			 leftRotate()
+			         d = getDistance()
+              			 print 'Rotating Left'
+				 print d
+				 return  d 
+
+      			 if a == 2:
+            			 reverse()
+            			 print 'Backing dat ass up!'
+        		
 		
 	turnOffMotors()
-	delay(150)
+	time.sleep(0.5)
 	forward()
+
+#	move_choices = [rightRotate(), leftRotate(), reverse()]
+#	for _ in range(step_count):
+#		make_choice = random.choice(move_choices)
+#		make_choice(step_count)
+		
+	
 
 
 
