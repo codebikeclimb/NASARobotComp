@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import serial
 from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
- 
+import random 
 import time
 import atexit
 
@@ -23,8 +23,10 @@ leftFrontRear.setSpeed(1)
 #initialize serial communications with XBee RF reciever
 xBee = serial.Serial('/dev/ttyACM0',57600)
 #initialize serial communications with onboard compass
-compass = serial.Serial('/dev/ttyACM1', 9600)
+compass = serial.Serial('/dev/ttyACM2', 9600)
 #compass = serial.Serial('/dev/ttyACM1', 9600)
+lidar = serial.Serial('/dev/ttyACM1', 115200)
+
 done = False
 beaconHeadings = []
 signalList = []
@@ -53,8 +55,8 @@ def leftRotate():
 
 
 def rightRotate():
-    leftFrontRear.setSpeed(90)
-    rightFrontRear.setSpeed(90)
+    leftFrontRear.setSpeed(50)
+    rightFrontRear.setSpeed(50)
     leftFrontRear.run(Adafruit_MotorHAT.FORWARD)
     rightFrontRear.run(Adafruit_MotorHAT.BACKWARD)
 
@@ -103,13 +105,52 @@ def findBeacon(cHeading):
 
 	print "cHeading: " + str(cHeading)
 	       # print botHeading
-        while (bHeading >= cHeading + 5 or bHeading <= cHeading - 5):
+        while (bHeading >= cHeading + 3 or bHeading <= cHeading - 3):
 		#print getBotHeading()
                 bHeading = getBotHeading()
 		print bHeading	
 		rightRotate()
 	success = True   
-        forward()
+        findWay()
+
+def getDistance():
+
+#       global distance
+
+        lidar_serial = lidar.readline().strip().lstrip('WIN!')
+        if(lidar_serial != 'nack' and lidar_serial != 'NACK' and lidar_serial != '> nack' and lidar_serial != 'ACK' and lidar_serial != ''):
+                lidar_serial = int(lidar_serial)
+#       print lidar_serial
+
+        return lidar_serial
+
+
+def findWay():
+#       global distance
+        d = getDistance()
+        while(d > 50):
+                forward()
+                d = getDistance()
+                print "Forward"
+                print d
+
+        turnOffMotors()
+        time.sleep(0.5)
+        a = random.randint(0,5)
+
+        while(d <= 50):
+                d = getDistance()
+                print d
+                if a % 2 == 0:
+                        rightRotate()
+                        time.sleep(0.5)
+                if a % 2 != 0:
+                        leftRotate()
+                        time.sleep(0.5)
+                d = getDistance()
+                print "Avoiding Obstacle"
+                print d
+	findHeading()
 
 while not done:
 #   bHeading = getBotHeading()     
