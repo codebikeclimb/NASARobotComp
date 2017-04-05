@@ -39,18 +39,18 @@ def reverse():
 
 # rotate left, rotate right
 def leftRotate():
-	for i in range(0,1000):
-   		 leftFrontRear.setSpeed(70)
-   		 rightFrontRear.setSpeed(70)
-   		 rightFrontRear.run(Adafruit_MotorHAT.FORWARD)
-   		 leftFrontRear.run(Adafruit_MotorHAT.BACKWARD)
+	
+   	 leftFrontRear.setSpeed(70)
+   	 rightFrontRear.setSpeed(70)
+   	 rightFrontRear.run(Adafruit_MotorHAT.FORWARD)
+   	 leftFrontRear.run(Adafruit_MotorHAT.BACKWARD)
 
 def rightRotate():
-   	for i in range(0,1000):
-   		 leftFrontRear.setSpeed(90)
-   		 rightFrontRear.setSpeed(90)
-    		 leftFrontRear.run(Adafruit_MotorHAT.FORWARD)
-    		 rightFrontRear.run(Adafruit_MotorHAT.BACKWARD)
+   #	for i in range(0,1000):
+   	 leftFrontRear.setSpeed(90)
+   	 rightFrontRear.setSpeed(90)
+    	 leftFrontRear.run(Adafruit_MotorHAT.FORWARD)
+    	 rightFrontRear.run(Adafruit_MotorHAT.BACKWARD)
 
 
 # turn left, turn right
@@ -81,7 +81,7 @@ def getDistance():
 	lidar_serial = lidar.readline().strip().lstrip('WIN!')
 	if(lidar_serial != 'nack' and lidar_serial != 'NACK' and lidar_serial != '> nack' and lidar_serial != 'ACK' and lidar_serial != ''):
 		lidar_serial = int(lidar_serial)
-	print lidar_serial
+#	print lidar_serial
 
 	return lidar_serial
 
@@ -91,39 +91,48 @@ def getDistance():
 def findWay():
 #	global distance        
 	d = getDistance()
-	while(d > 15):
+	while(d > 50):
 		forward()
 		d = getDistance()
-
-	
+		print "Forward"
+		print d
+			
 	turnOffMotors()
 	time.sleep(0.5)
-        a = random.randint(0,3)
+        a = random.randint(0,5)
 	
-	while(d <= 15):
-	#	rightRotate()
-			 turnOffMotors()
-#		       	 d = getDistance()
-		
+	while(d <= 50):
+		d = getDistance()
+		print d
+		if a % 2 == 0:
+			rightRotate()
+			time.sleep(0.5)
+	        if a % 2 != 0:
+			leftRotate()
+			time.sleep(0.5)
+		d = getDistance()
+		print "Avoiding Obstacle"
+		print d
+			# time.sleep(1)
 
 	#	for i in range (1, (N)):
-       			 if a == 0:
-           			 rightRotate()
-           			 print 'Rotating right'
-                         	 d = getDistance()
-				 print d
-				 return d
+       	#		 if a == 0:
+        #   			 rightRotate()
+        #   			 print 'Rotating right'
+        #                 	 d = getDistance()
+	#		#	 print d
+	#			 return d
 
-			 if a == 1:
-           			 leftRotate()
-			         d = getDistance()
-              			 print 'Rotating Left'
-				 print d
-				 return  d 
+	#		 elif a == 1:
+         #  			 leftRotate()
+	#		         d = getDistance()
+         #     			 print 'Rotating Left'
+			#	 print d
+	#			 return  d 
 
-      			 if a == 2:
-            			 reverse()
-            			 print 'Backing dat ass up!'
+#     			 elif a == 2:
+#            			 reverse()
+#            			 print 'Backing dat ass up!'
         		
 		
 	turnOffMotors()
